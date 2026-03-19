@@ -33,7 +33,7 @@ function RiskMeter({ score }) {
 
 function SHAPPanel({ shapValues }) {
   const entries = Object.entries(shapValues || {}).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
-  const maxVal = Math.max(...entries.map(([,v]) => Math.abs(v)), 0.01);
+  const maxVal = Math.max(...entries.map(([, v]) => Math.abs(v)), 0.01);
 
   return (
     <div>
@@ -98,7 +98,7 @@ function ChatPanel({ claimId, claimContext }) {
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-dim)', borderRadius: '16px', display: 'flex', flexDirection: 'column', height: '340px', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, var(--accent-violet), transparent)' }} />
       <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-dim)', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: 600 }}>
-        🤖 AEGIS Intelligence
+        🤖 Claimshield Intelligence
         <span style={{ background: 'linear-gradient(135deg, var(--accent-violet), var(--accent-blue))', borderRadius: '6px', padding: '3px 8px', fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'white', fontWeight: 500, letterSpacing: '0.05em' }}>RAG v2</span>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -116,7 +116,7 @@ function ChatPanel({ claimId, claimContext }) {
         ))}
         {typing && (
           <div style={{ display: 'flex', gap: '4px', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-surface)', borderRadius: '4px 12px 12px 12px', border: '1px solid var(--border-dim)', width: 'fit-content' }}>
-            {[0,1,2].map(i => <div key={i} style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--text-muted)', animation: 'blink 1.4s ease-in-out infinite', animationDelay: `${i * 0.2}s` }} />)}
+            {[0, 1, 2].map(i => <div key={i} style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--text-muted)', animation: 'blink 1.4s ease-in-out infinite', animationDelay: `${i * 0.2}s` }} />)}
           </div>
         )}
         <div ref={msgEndRef} />
@@ -126,7 +126,7 @@ function ChatPanel({ claimId, claimContext }) {
           placeholder="Ask about risk factors, fraud ring, document analysis..."
           value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} />
         <button onClick={send} style={{ width: '38px', height: '38px', background: 'linear-gradient(135deg, var(--accent-violet), var(--accent-blue))', border: 'none', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--glow-blue)' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
         </button>
       </div>
     </div>
@@ -144,8 +144,8 @@ export default function ClaimDetailPage() {
     setClaim(mock);
     setGraphData(MOCK_GRAPH(id));
 
-    api.get(`/claims/${id}`).then(r => setClaim(r.data)).catch(() => {});
-    api.get(`/graph/${id}`).then(r => setGraphData(r.data)).catch(() => {});
+    api.get(`/claims/${id}`).then(r => setClaim(r.data)).catch(() => { });
+    api.get(`/graph/${id}`).then(r => setGraphData(r.data)).catch(() => { });
   }, [id]);
 
   if (!claim) return <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '60px' }}>Loading claim data...</div>;
@@ -183,7 +183,7 @@ export default function ClaimDetailPage() {
         <div className="card">
           <div className="section-header">
             <div className="section-title" style={{ fontSize: '14px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
               SHAP Feature Attribution
             </div>
             <span className="chip chip-info">XGBoost v3.2</span>
@@ -218,7 +218,7 @@ export default function ClaimDetailPage() {
         <div className="card">
           <div className="section-header">
             <div className="section-title" style={{ fontSize: '14px' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-amber)" strokeWidth="2"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
               Fraud Ring: {graphData?.fraudRingId}
             </div>
             {claim.fraudRingId && <span className="chip chip-danger">ACTIVE</span>}

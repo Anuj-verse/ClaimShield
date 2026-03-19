@@ -1,6 +1,21 @@
 version: '3.8'
 
 services:
+  nlp:
+    build:
+      context: ./nlp
+    container_name: claimshield-nlp
+    ports:
+      - "5001:5001"
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   backend:
     image: anujgope/claimshield-backend:latest
     container_name: claimshield-backend
@@ -9,7 +24,7 @@ services:
     environment:
       - PORT=5000
       - NODE_ENV=production
-      # Pulling variables from the host environment
+      - NLP_API_URL=http://nlp:5001
       - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
       - AWS_REGION=${AWS_REGION:-eu-north-1}

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('investigator@aegis.gov');
+  const [email, setEmail] = useState('investigator@Claimshield.gov');
   const [password, setPassword] = useState('demo1234');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -69,7 +69,7 @@ export default function LoginPage() {
             boxShadow: 'var(--glow-cyan)'
           }}>⬡</div>
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>AEGIS</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '26px', fontWeight: 800, color: 'var(--text-primary)' }}>Claimshield</div>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>FRAUD INTELLIGENCE PLATFORM</div>
           </div>
         </div>
@@ -104,9 +104,9 @@ export default function LoginPage() {
 
           <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px' }} disabled={loading}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-              <polyline points="10 17 15 12 10 7"/>
-              <line x1="15" y1="12" x2="3" y2="12"/>
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
             </svg>
             {loading ? 'AUTHENTICATING...' : 'AUTHENTICATE'}
           </button>
@@ -118,7 +118,7 @@ export default function LoginPage() {
 
         <div style={{ marginTop: '24px', padding: '14px', background: 'var(--bg-surface)', borderRadius: '10px', border: '1px solid var(--border-dim)' }}>
           <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--accent-amber)', marginBottom: '6px' }}>⚡ DEMO CREDENTIALS</div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Email: investigator@aegis.gov &nbsp;|&nbsp; Password: any</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Email: investigator@Claimshield.gov &nbsp;|&nbsp; Password: any</div>
         </div>
       </div>
     </div>
