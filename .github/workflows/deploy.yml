@@ -40,6 +40,18 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Securely Copy Compose File to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/${{ secrets.EC2_USER }}/claimshield/"
+
       - name: Execute Remote SSH Deployment
         uses: appleboy/ssh-action@master
         env:
@@ -51,18 +63,15 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: DOCKER_USERNAME,DOCKER_PASSWORD
           script: |
-            # 1. Login to Docker Hub explicitly to prevent rate-limiting and allow pulling if repo is private
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            # 1. Login to Docker Hub explicitly using sudo to bypass EC2 user permission issues
+            echo "$DOCKER_PASSWORD" | sudo docker login -u "$DOCKER_USERNAME" --password-stdin
             
-            # 2. Navigate to the clone path
-            cd /home/ubuntu/claimshield
+            # 2. Navigate to the scp payload dir
+            cd /home/${{ secrets.EC2_USER }}/claimshield
             
-            # 3. Pull the updated docker-compose.yml definition
-            git pull origin main
+            # 3. Use sudo for Compose to pull the newest images and spin them up
+            sudo docker compose pull || sudo docker-compose pull
+            sudo docker compose up -d || sudo docker-compose up -d
             
-            # 4. Pull the fresh images we just pushed to Docker Hub and restart containers
-            docker compose pull
-            docker compose up -d
-            
-            # 5. Clean up old dangling images to avoid the EC2 storage filling up
-            docker image prune -af
+            # 4. Clean up old dangling images to avoid the EC2 storage filling up
+            sudo docker image prune -af
