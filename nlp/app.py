@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from report_generator import generate_report
 from chatbot import get_chat_reply
+from xgboost_scorer import get_xgboost_score
+from gnn.gnn_service import get_neighbours
 
 app = Flask(__name__)
 
@@ -20,9 +22,12 @@ def score():
         
         report = generate_report(claim_data)
         
+        # Use the brand new XGBoost pre-trained fraud model
+        xgb_risk = get_xgboost_score(claim_data)
+        
         # Map python report to what JS frontend expects
         transformed = {
-            "riskScore": report.get("final_score", 50),
+            "riskScore": xgb_risk,
             "fraudFlags": report.get("red_flags", []) + report.get("triggered_rules", []),
             "shapValues": {
                 "claim_amount": 0.35 if claim_data["amount"] > 50000 else 0.1,
@@ -53,6 +58,19 @@ def chat():
     except Exception as e:
         print("Error during chat:", e)
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/gnn', methods=['POST'])
+def gnn():
+    try:
+        data = request.json
+        claim_id = data.get('claimId', '')
+        depth = int(data.get('depth', 2))
+        result = get_neighbours(claim_id, depth)
+        return jsonify(result)
+    except Exception as e:
+        print('GNN error:', e)
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
