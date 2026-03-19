@@ -1,1 +1,9 @@
+<<<<<<< Updated upstream
 fraud-dashboard.html
+=======
+venv/
+__pycache__/
+*.pyc
+.env
+data/
+>>>>>>> Stashed changes
