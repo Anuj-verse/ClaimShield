@@ -120,4 +120,24 @@ function generateFraudRingGraph(claimId, fraudRingId) {
   };
 }
 
-module.exports = { scoreClaim, generateMockClaim, generateFraudRingGraph };
+async function analyzeClaimAsync(claimData) {
+  try {
+    const url = process.env.NLP_API_URL || 'http://localhost:5001';
+    const res = await fetch(`${url}/score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(claimData),
+      signal: AbortSignal.timeout(5000) // 5s timeout
+    });
+    
+    if (res.ok) {
+      return await res.json();
+    }
+    throw new Error(`NLP API returned ${res.status}`);
+  } catch (err) {
+    console.log(`[ML] Python NLP service unreachable/failed (${err.message}), falling back to local deterministic mock array.`);
+    return scoreClaim(claimData);
+  }
+}
+
+module.exports = { scoreClaim, generateMockClaim, generateFraudRingGraph, analyzeClaimAsync };

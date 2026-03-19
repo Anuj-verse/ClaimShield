@@ -11,7 +11,7 @@ const seedDB = async () => {
       console.error('MONGO_URI is not set in .env');
       process.exit(1);
     }
-    
+
     console.log('Connecting to MongoDB...');
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected.');
@@ -24,7 +24,7 @@ const seedDB = async () => {
     const hashed = await bcrypt.hash('demo1234', 10);
     const demoUser = await User.create({
       name: 'Investigator Demo',
-      email: 'investigator@aegis.gov',
+      email: 'investigator@Claimshield.gov',
       passwordHash: hashed,
       role: 'investigator'
     });
@@ -43,7 +43,7 @@ const seedDB = async () => {
 
     await Claim.insertMany(claims);
     console.log(`Successfully seeded ${claims.length} claims.`);
-    
+
     console.log('Done!');
     process.exit(0);
   } catch (err) {

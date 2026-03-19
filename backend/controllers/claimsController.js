@@ -1,5 +1,5 @@
 const Claim = require('../models/Claim');
-const { scoreClaim, generateMockClaim } = require('../utils/mlMock');
+const { scoreClaim, generateMockClaim, analyzeClaimAsync } = require('../utils/mlMock');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
@@ -47,7 +47,8 @@ const MOCK_CLAIMS = Array.from({ length: 20 }, (_, i) => generateMockClaim()).ma
 const uploadClaim = async (req, res) => {
   const { policyId, claimantName, claimantEmail, claimantPhone, claimantAddress, claimType, amount, description, files } = req.body;
   
-  const mlResult = scoreClaim({ amount: Number(amount), claimantPhone, claimantAddress, description });
+  // Connect to the asynchronous NLP script
+  const mlResult = await analyzeClaimAsync({ claimType, amount: Number(amount), claimantPhone, claimantAddress, description });
   const images = files || []; // Array of S3 URLs
 
   // Try saving to DB
