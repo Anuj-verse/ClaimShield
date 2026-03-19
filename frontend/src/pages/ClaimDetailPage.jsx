@@ -192,23 +192,42 @@ export default function ClaimDetailPage() {
         </div>
 
         {/* Claim Metadata */}
-        <div className="card">
-          <div className="section-title" style={{ fontSize: '14px', marginBottom: '16px' }}>📋 Claim Details</div>
-          {[
-            ['Policy ID', claim.policyId],
-            ['Claim Type', claim.claimType],
-            ['Amount', `₹${Number(claim.amount).toLocaleString('en-IN')}`],
-            ['Status', claim.status?.replace('_', ' ').toUpperCase()],
-            ['Submitted', new Date(claim.createdAt).toLocaleString()],
-            ['Claimant Email', claim.claimantEmail || '—'],
-            ['Phone', claim.claimantPhone || '—'],
-            ['Address', claim.claimantAddress || '—']
-          ].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-dim)', fontSize: '13px' }}>
-              <span style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>{k}</span>
-              <span style={{ textAlign: 'right', maxWidth: '55%', wordBreak: 'break-word' }}>{v}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="card">
+            <div className="section-title" style={{ fontSize: '14px', marginBottom: '16px' }}>📋 Claim Details</div>
+            {[
+              ['Policy ID', claim.policyId],
+              ['Claim Type', claim.claimType],
+              ['Amount', `₹${Number(claim.amount).toLocaleString('en-IN')}`],
+              ['Status', claim.status?.replace('_', ' ').toUpperCase()],
+              ['Submitted', new Date(claim.createdAt).toLocaleString()],
+              ['Claimant Email', claim.claimantEmail || '—'],
+              ['Phone', claim.claimantPhone || '—'],
+              ['Address', claim.claimantAddress || '—']
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-dim)', fontSize: '13px' }}>
+                <span style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>{k}</span>
+                <span style={{ textAlign: 'right', maxWidth: '55%', wordBreak: 'break-word' }}>{v}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="card">
+            <div className="section-title" style={{ fontSize: '14px', marginBottom: '16px' }}>🔬 CV Tampering Flags</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
+              {(claim.fraudFlags || []).filter(f => /clon|ELA|noise|tamper|mismatch/i.test(f)).length > 0 ? (
+                (claim.fraudFlags || []).filter(f => /clon|ELA|noise|tamper|mismatch/i.test(f)).map((f, i) => (
+                  <div key={i} style={{ color: 'var(--accent-red)', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <span>✘</span> <span>{f}</span>
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: 'var(--accent-green)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>✅</span> <span>Image verified authentic</span>
+                </div>
+              )}
             </div>
-          ))}
+          </div>
         </div>
       </div>
 

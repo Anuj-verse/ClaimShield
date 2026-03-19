@@ -36,11 +36,16 @@ export default function UploadPage() {
     try {
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => formData.append(key, value));
-      files.forEach(file => formData.append('files', file));
-
-      const { data } = await api.post('/claims', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const token = localStorage.getItem('cs_token');
+      const response = await fetch('/api/claims', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
       });
+      const data = await response.json();
+      
+      if (!response.ok) throw new Error(data.message || 'Upload failed');
+      
       setResult(data.claim);
       addClaim(data.claim);
       toast.success(`Claim submitted! Risk Score: ${data.claim.riskScore}`);

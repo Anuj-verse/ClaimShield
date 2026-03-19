@@ -16,6 +16,9 @@ const MOCK_CLAIMS = Array.from({ length: 20 }, (_, i) => generateMockClaim()).ma
 }));
 
 const uploadClaim = async (req, res) => {
+  console.log('Upload Request Body:', req.body);
+  console.log('Upload Request Files:', req.files?.map(f => f.filename));
+
   const { policyId, claimantName, claimantEmail, claimantPhone, claimantAddress, claimType, amount, description } = req.body;
   
   // Connect to the asynchronous NLP script
