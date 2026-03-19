@@ -3,8 +3,10 @@ from report_generator import generate_report
 from chatbot import get_chat_reply
 from xgboost_scorer import get_xgboost_score
 from gnn.gnn_service import get_neighbours
+from cv.cv_tampering import cv_blueprint
 
 app = Flask(__name__)
+app.register_blueprint(cv_blueprint, url_prefix='/cv')
 
 @app.route('/score', methods=['POST'])
 def score():

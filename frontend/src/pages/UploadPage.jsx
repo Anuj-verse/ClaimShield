@@ -34,21 +34,13 @@ export default function UploadPage() {
     }
     setLoading(true);
     try {
-      const uploadedUrls = [];
-      for (const file of files) {
-        toast(`Uploading ${file.name}...`, { icon: '⬆️' });
-        const { data: { uploadUrl, fileUrl } } = await api.get(`/claims/upload-url?fileName=${encodeURIComponent(file.name)}&fileType=${encodeURIComponent(file.type)}`);
-        
-        await fetch(uploadUrl, {
-          method: 'PUT',
-          body: file,
-          headers: { 'Content-Type': file.type }
-        });
-        uploadedUrls.push(fileUrl);
-      }
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => formData.append(key, value));
+      files.forEach(file => formData.append('files', file));
 
-      const payload = { ...form, amount: Number(form.amount), files: uploadedUrls };
-      const { data } = await api.post('/claims', payload);
+      const { data } = await api.post('/claims', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       setResult(data.claim);
       addClaim(data.claim);
       toast.success(`Claim submitted! Risk Score: ${data.claim.riskScore}`);

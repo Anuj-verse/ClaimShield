@@ -1,37 +1,8 @@
 const Claim = require('../models/Claim');
 const { scoreClaim, generateMockClaim, analyzeClaimAsync } = require('../utils/mlMock');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-
-const s3Config = { region: process.env.AWS_REGION || 'us-east-1' };
-if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-  s3Config.credentials = {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-  };
-}
-const s3Client = new S3Client(s3Config);
-
-const getUploadUrl = async (req, res) => {
-  const { fileName, fileType } = req.query;
-  if (!fileName || !fileType) return res.status(400).json({ error: 'fileName and fileType required' });
-  
-  const key = `uploads/${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-  const command = new PutObjectCommand({
-    Bucket: process.env.AWS_BUCKET_NAME,
-    Key: key,
-    ContentType: fileType
-  });
-
-  try {
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-    const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
-    res.json({ uploadUrl, fileUrl });
-  } catch (err) {
-    console.error('S3 Error:', err);
-    res.status(500).json({ error: 'Failed to generate presigned URL' });
-  }
-};
+const fs = require('fs');
+const axios = require('axios');
+const FormData = require('form-data');
 
 // Mock claim data for when DB is unavailable
 const MOCK_CLAIMS = Array.from({ length: 20 }, (_, i) => generateMockClaim()).map((c, i) => ({
@@ -45,11 +16,46 @@ const MOCK_CLAIMS = Array.from({ length: 20 }, (_, i) => generateMockClaim()).ma
 }));
 
 const uploadClaim = async (req, res) => {
-  const { policyId, claimantName, claimantEmail, claimantPhone, claimantAddress, claimType, amount, description, files } = req.body;
+  const { policyId, claimantName, claimantEmail, claimantPhone, claimantAddress, claimType, amount, description } = req.body;
   
   // Connect to the asynchronous NLP script
   const mlResult = await analyzeClaimAsync({ claimType, amount: Number(amount), claimantPhone, claimantAddress, description });
-  const images = files || []; // Array of S3 URLs
+  const images = [];
+  let cvFlags = [];
+  let highestTamperScore = 0;
+
+  if (req.files && req.files.length > 0) {
+    for (const file of req.files) {
+      const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+      images.push(fileUrl);
+      
+      try {
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(file.path));
+        
+        const cvRes = await axios.post('http://localhost:5001/cv/tamper', formData, {
+          headers: formData.getHeaders()
+        });
+        
+        const cvData = cvRes.data;
+        if (cvData.tampering_score > highestTamperScore) {
+          highestTamperScore = cvData.tampering_score;
+        }
+        if (cvData.reasons) {
+          cvFlags.push(...cvData.reasons);
+        }
+      } catch (err) {
+        console.error('CV Error:', err.message);
+      }
+    }
+  }
+
+  if (highestTamperScore > 60) {
+    mlResult.riskScore = Math.min(100, (mlResult.riskScore || 0) + 30);
+  }
+  if (cvFlags.length > 0) {
+    mlResult.fraudFlags = [...(mlResult.fraudFlags || []), ...cvFlags];
+  }
 
   // Try saving to DB
   const claimData = { policyId, claimantName, claimantEmail, claimantPhone, claimantAddress, claimType, amount: Number(amount), description, images, submittedBy: req.user.id, ...mlResult };
@@ -109,4 +115,4 @@ const getClaimById = async (req, res) => {
   }
 };
 
-module.exports = { uploadClaim, getClaims, getRecentClaims, getClaimById, getUploadUrl };
+module.exports = { uploadClaim, getClaims, getRecentClaims, getClaimById };
