@@ -9,6 +9,7 @@ load_dotenv()
 
 model = SentenceTransformer('all-MiniLM-L6-v2')
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_NAME = os.getenv("MODEL_NAME", "arcee-ai/trinity-mini-20251201:free")
 FAISS_INDEX_PATH = os.path.join(BASE_DIR, "vector_store/faiss_index/index.faiss")
 METADATA_PATH = os.path.join(BASE_DIR, "vector_store/faiss_index/metadata.pkl")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -40,7 +41,7 @@ def call_openrouter(prompt):
         "Content-Type": "application/json"
     }
     body = {
-       "model": "openrouter/free",
+      "model": MODEL_NAME,
         "messages": [
             {
                 "role": "system",
