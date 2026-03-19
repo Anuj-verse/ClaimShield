@@ -1,0 +1,68 @@
+name: ClaimShield CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  # Stage 1: Build the Docker Images and Push to Docker Hub
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate with Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: anujgope/claimshield-backend:latest
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: anujgope/claimshield-frontend:latest
+
+  # Stage 2: Connect to EC2 and Deploy the Built Images
+  deploy-production:
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Remote SSH Deployment
+        uses: appleboy/ssh-action@master
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: DOCKER_USERNAME,DOCKER_PASSWORD
+          script: |
+            # 1. Login to Docker Hub explicitly to prevent rate-limiting and allow pulling if repo is private
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            
+            # 2. Navigate to the clone path
+            cd /home/ubuntu/claimshield
+            
+            # 3. Pull the updated docker-compose.yml definition
+            git pull origin main
+            
+            # 4. Pull the fresh images we just pushed to Docker Hub and restart containers
+            docker compose pull
+            docker compose up -d
+            
+            # 5. Clean up old dangling images to avoid the EC2 storage filling up
+            docker image prune -af
