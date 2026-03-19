@@ -15,7 +15,7 @@ export const ClaimsProvider = ({ children }) => {
 
     // Connect to backend socket
     try {
-      socketRef.current = io('http://localhost:5000', { transports: ['websocket', 'polling'] });
+      socketRef.current = io({ path: '/socket.io/', transports: ['websocket', 'polling'] });
 
       socketRef.current.on('newClaim', (claim) => {
         setRecentClaims(prev => [claim, ...prev].slice(0, 20));

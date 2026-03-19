@@ -1,5 +1,37 @@
 const Claim = require('../models/Claim');
 const { scoreClaim, generateMockClaim } = require('../utils/mlMock');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+
+const s3Config = { region: process.env.AWS_REGION || 'us-east-1' };
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+  s3Config.credentials = {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  };
+}
+const s3Client = new S3Client(s3Config);
+
+const getUploadUrl = async (req, res) => {
+  const { fileName, fileType } = req.query;
+  if (!fileName || !fileType) return res.status(400).json({ error: 'fileName and fileType required' });
+  
+  const key = `uploads/${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+  const command = new PutObjectCommand({
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: key,
+    ContentType: fileType
+  });
+
+  try {
+    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
+    res.json({ uploadUrl, fileUrl });
+  } catch (err) {
+    console.error('S3 Error:', err);
+    res.status(500).json({ error: 'Failed to generate presigned URL' });
+  }
+};
 
 // Mock claim data for when DB is unavailable
 const MOCK_CLAIMS = Array.from({ length: 20 }, (_, i) => generateMockClaim()).map((c, i) => ({
@@ -13,13 +45,10 @@ const MOCK_CLAIMS = Array.from({ length: 20 }, (_, i) => generateMockClaim()).ma
 }));
 
 const uploadClaim = async (req, res) => {
-  const { policyId, claimantName, claimantEmail, claimantPhone, claimantAddress, claimType, amount, description } = req.body;
-  if (!policyId || !claimantName || !claimType || !amount) {
-    return res.status(400).json({ error: 'Required fields: policyId, claimantName, claimType, amount' });
-  }
-
+  const { policyId, claimantName, claimantEmail, claimantPhone, claimantAddress, claimType, amount, description, files } = req.body;
+  
   const mlResult = scoreClaim({ amount: Number(amount), claimantPhone, claimantAddress, description });
-  const images = req.files ? req.files.map(f => `/uploads/${f.filename}`) : [];
+  const images = files || []; // Array of S3 URLs
 
   // Try saving to DB
   const claimData = { policyId, claimantName, claimantEmail, claimantPhone, claimantAddress, claimType, amount: Number(amount), description, images, submittedBy: req.user.id, ...mlResult };
@@ -79,4 +108,4 @@ const getClaimById = async (req, res) => {
   }
 };
 
-module.exports = { uploadClaim, getClaims, getRecentClaims, getClaimById };
+module.exports = { uploadClaim, getClaims, getRecentClaims, getClaimById, getUploadUrl };

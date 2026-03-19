@@ -34,14 +34,26 @@ export default function UploadPage() {
     }
     setLoading(true);
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      files.forEach(f => fd.append('files', f));
-      const { data } = await api.post('/claims', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const uploadedUrls = [];
+      for (const file of files) {
+        toast(`Uploading ${file.name}...`, { icon: '⬆️' });
+        const { data: { uploadUrl, fileUrl } } = await api.get(`/claims/upload-url?fileName=${encodeURIComponent(file.name)}&fileType=${encodeURIComponent(file.type)}`);
+        
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: { 'Content-Type': file.type }
+        });
+        uploadedUrls.push(fileUrl);
+      }
+
+      const payload = { ...form, amount: Number(form.amount), files: uploadedUrls };
+      const { data } = await api.post('/claims', payload);
       setResult(data.claim);
       addClaim(data.claim);
       toast.success(`Claim submitted! Risk Score: ${data.claim.riskScore}`);
-    } catch {
+    } catch (err) {
+      console.error(err);
       // Fallback: mock result
       const mock = { ...generateMockClaim(), ...form, amount: Number(form.amount), _id: `CLM-${Date.now()}`, createdAt: new Date().toISOString() };
       setResult(mock);
