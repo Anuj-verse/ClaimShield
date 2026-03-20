@@ -279,7 +279,7 @@ export default function ClaimDetailPage() {
         </div>
 
         {/* Chat */}
-        <ChatPanel claimId={claim._id} claimContext={{ riskScore: claim.riskScore, amount: claim.amount }} />
+        <ChatPanel claimId={claim._id} claimContext={{ riskScore: claim.riskScore, amount: claim.amount, shapValues: claim.shapValues, fraudFlags: claim.fraudFlags, description: claim.description || `Claimant ${claim.claimantName} filed for ${claim.claimType} with amount ₹${claim.amount}` }} />
       </div>
     </div>
   );

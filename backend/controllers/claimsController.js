@@ -62,7 +62,12 @@ const uploadClaim = async (req, res) => {
 
   // Try saving to DB
   const claimData = { policyId, claimantName, claimantEmail, claimantPhone, claimantAddress, claimType, amount: Number(amount), description, images, submittedBy: req.user.id, ...mlResult };
-  const claim = await Claim.create(claimData).catch(() => ({ ...claimData, _id: `CLM-${Date.now()}`, createdAt: new Date().toISOString() }));
+  const claim = await Claim.create(claimData).catch((dbErr) => {
+    console.error('Failed to save to MongoDB:', dbErr.message);
+    const fallbackClaim = { ...claimData, _id: `CLM-${Date.now()}`, createdAt: new Date().toISOString() };
+    MOCK_CLAIMS.unshift(fallbackClaim);
+    return fallbackClaim;
+  });
 
   // Emit to socket
   const io = req.app.get('io');

@@ -33,7 +33,12 @@ def call_openrouter(prompt):
         headers=headers,
         json=body
     )
-    return response.json()['choices'][0]['message']['content']
+    data = response.json()
+    if 'choices' in data:
+        return data['choices'][0]['message']['content']
+    else:
+        print("OpenRouter Error:", data)
+        return '{"risk_score": 50, "risk_level": "MEDIUM", "is_suspicious": true, "red_flags": ["LLM API Error"], "matching_patterns": [], "recommended_actions": ["Review Manually"], "summary": "API Limit reached."}'
 
 def generate_report(claim_data: dict):
     claim_text = (

@@ -53,7 +53,7 @@ def chat():
         context = data.get('claim_context', '')
         
         # Format context for python prompt
-        ctx_str = f"Score: {context.get('riskScore')}. Flags: {context.get('fraudFlags')}. Desc: {context.get('description')}" if context else ""
+        ctx_str = f"Score: {context.get('riskScore')}. Flags: {context.get('fraudFlags')}. Desc: {context.get('description')}. SHAP: {context.get('shapValues')}" if context else ""
         
         reply = get_chat_reply(question, ctx_str)
         return jsonify({"reply": reply})
